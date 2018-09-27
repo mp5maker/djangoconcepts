@@ -8,6 +8,7 @@ Practice Django Concepts
     pip install environ
     pip install virtualenvwrapper
     pip install Django==1.11.*
+    pip install djangorestframework==3.7.7
 
     export WORKON_HOME=~/Envs
     mkdir -p $WORKON_HOME
