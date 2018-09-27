@@ -1,0 +1,2 @@
+# djangoconcepts
+Practice Django Concepts
