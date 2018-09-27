@@ -4,6 +4,7 @@ Practice Django Concepts
 ## Installation ##
 ```bash
     sudo apt-get install pip
+    sudo apt-get install nodejs
 
     pip install environ
     pip install virtualenvwrapper
@@ -13,6 +14,7 @@ Practice Django Concepts
     export WORKON_HOME=~/Envs
     mkdir -p $WORKON_HOME
     source /usr/local/bin/virtualenvwrapper.sh
+    source ~/.bashrc
     mkvirtualenv djangoconcepts
 ```
 
@@ -36,5 +38,5 @@ django-admin startproject [name]
 * python manage.py makemigration [name]
 
 ## Npm Install ##
-
-
+* npm install --save-dev gulp gulp-sass
+* npm install --save-dev bootstrap materialize
