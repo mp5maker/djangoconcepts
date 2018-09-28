@@ -96,16 +96,45 @@ No | Arguments | Condition | Description
 ## Learning Querysets ##
 
 #### Get Raw SQLS using all(), filter() only ####
-*all()* : Get Raw SQL (All Objects) 
+*all()* : Get **Raw SQL** (All Objects) 
 ```bash
     from django.contrib.auth.models import User [Group is also available]
     user = User.objects.all()
     str(user.query)
 ```
 
-*filter(args)* : Get Raw SQL (Specific Objects)
+*filter(args)* : Get **Raw SQL** (Specific Objects)
 ```bash
     from django.contrib.auth.models import User
     user = User.objects.filter(pk=1)
     str(user.query)
+```
+
+*Creating a Simple Employee Model*
+```python
+    class Employee(models.Model):
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    age = models.IntegerField()
+    salary = models.FloatField()
+
+    def __str__(self):
+        return self.first_name + " " + self.last_name
+```
+
+*filter(args)* : OR Filtering 
+```bash
+    from serializer.models import Employee
+    filter1 = Employee.objects.filter(first_name="S")
+    filter2 = Employee.objects.filter(last_name="K")
+    result = filter1 | filter2
+    str(result.query)
+
+    OR
+
+    from serializer.models import Employee
+    from django.db.models import Q
+    employee = Employee.objects
+    result = employee.filters(Q(first_name="S") | Q(last_name="K"))
+    str(result.query)
 ```
