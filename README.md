@@ -95,19 +95,21 @@ No | Arguments | Condition | Description
 
 ## Learning Querysets ##
 
-#### Get Raw SQLS using all(), filter() only ####
-*all()* : Get **Raw SQL** (All Objects) 
+### Get Raw SQLS using all(), filter() only ###
+[**1**] *all()* : Get **Raw SQL** (All Objects) 
 ```bash
     from django.contrib.auth.models import User [Group is also available]
     user = User.objects.all()
     str(user.query)
+    print(user)
 ```
 
-*filter(args)* : Get **Raw SQL** (Specific Objects)
+[**2**] *filter(args)* : Get **Raw SQL** (Specific Objects)
 ```bash
     from django.contrib.auth.models import User
     user = User.objects.filter(pk=1)
     str(user.query)
+    print(user)
 ```
 
 *Creating a Simple Employee Model*
@@ -121,20 +123,96 @@ No | Arguments | Condition | Description
     def __str__(self):
         return self.first_name + " " + self.last_name
 ```
+### OR Operation ###
+* queryset_1 | queryset_2
+* filter(Q(<condition_1>)|Q(<condition_2>)
 
-*filter(args)* : OR Filtering 
+[**3**] *filter(args)* : OR Filtering 
 ```bash
     from serializer.models import Employee
     filter1 = Employee.objects.filter(first_name="S")
     filter2 = Employee.objects.filter(last_name="K")
     result = filter1 | filter2
     str(result.query)
+    print(result)
 
-    OR
+    Alternatively, 
 
     from serializer.models import Employee
     from django.db.models import Q
     employee = Employee.objects
     result = employee.filters(Q(first_name="S") | Q(last_name="K"))
     str(result.query)
+    print(result)
+```
+[**4**] *filter(args)* : OR and %LIKE Filtering
+```bash
+    from serialzier.models import Employee
+    from django.db.models import Q
+    employee.Employee.objects
+    result = employee.filter(Q(first_name__startswith="S") | Q(last_name__startswith="K"))
+    str(result.query)
+    print(result)
+```
+### AND Operation ###
+* filter(<condition_1>, <condition_2>)
+* queryset_1 & queryset_2
+* filter(Q(<condition_1>) & Q(<condition_2>))
+
+[**5**] *filter(args)* : AND Filtering
+```bash
+    from serializer.models import Employee
+    employee = Employee.objects
+    result = employee.filter(first_name="Photon", last_name="Khan")
+    str(result.query)
+    print result
+
+    Alternatively,
+
+    from serializer.models import Employee
+    employee = Employee.objects
+    filter1 = employee.filter(first_name="Photon")
+    filter2 = employee.filter(last_name="Khan")
+    result = filter1 & filter2
+    str(result.query)
+    print result
+
+    Alternatively,
+
+    from serializer.models import Employee
+    from django.db.models import Q
+    employee = Employee.objects
+    result = employee.filter(Q(first_name="Photon") & Q(last_name="Khan"))
+    print result
+```
+### NOT Operation ###
+* exclude(<condition>)
+* filter(~Q(<condition>))
+
+[**6**]  *filter(args)*, *exclude(args)* : NOT Filtering
+```bash
+    from serializer.models import Employee
+    employee = Employee.objects
+    result = employee.exclude(age__gt=30)
+    str(result.query)
+    print result
+
+    Alternatively,
+
+    from serializer.models import Employee
+    employee = Employee.objects
+    result = employee.filter(~Q(age__gt=30))
+    str(result.query)
+    print result
+```
+### Union ###
+[**7**] filter1.*union*(filter2)
+```bash
+    from serializer.models import Employee
+    employee = Employee.objects
+    filter1 = employee.filter(salary__gt=50000)
+    filter2 = employee.filter(salary__lt=20000)
+    result = filter1.union(filter2)
+    str(result.query)
+    print result
 ```
