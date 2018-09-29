@@ -1,5 +1,5 @@
 # Django Concepts #
-Practice Django Concepts
+Practice Django Concepts from [Django ORM CookBook](https://books.agiliq.com/projects/django-orm-cookbook/en/latest/)
 
 ## Installation ##
 ```bash
@@ -94,6 +94,7 @@ No | Arguments | Condition | Description
 17 | Field.validator | --- | Use validation with the fields   
 
 ## Learning Querysets ##
+* Match the Raw Queries with queryset.sql file 
 
 ### Get Raw SQLS using all(), filter() only ###
 [**1**] *all()* : Get **Raw SQL** (All Objects) 
@@ -215,4 +216,188 @@ No | Arguments | Condition | Description
     result = filter1.union(filter2)
     str(result.query)
     print result
+```
+### Get Desired Field ###
+* values and values_list methods on queryset.
+* only_method
+
+[**8**] *filter(args).values(fields)*, *filter(args).only(fields)* : Chosen Fields
+```bash
+    from serializer.models import Employee
+    employee = Employee.objects
+    result = employee.filter(first_name__startswith="S").values('first_name', 'last_name')
+    str(result.query)
+    print result
+
+    Alternatively only[chooses id as extra],
+
+    from serializer.models import Employee
+    employee = Employee.objects
+    result = employee.filter(first_name__startswith="S").only('first_name', 'last_name')
+    str(result.query)
+    print result
+```
+### Subquery Expression ###
+[**9**] *order_by(args)*, *annotate(args)*, *Subquery(args)*
+```bash
+    from serializer.models import Hero, Category
+    from django.db.models import Q, Subquery, OuterRef
+    hero = Hero.objects.filter(category=OuterRef('pk')
+                .order_by('-benevolence_factor'))
+    result = Category.objects.all().annotate(
+        most_benovolent_hero = Subquery(
+            hero.values('name')[:1]
+        )
+    )
+    str(result.query)
+    print result
+```
+### Compare Two Fields ###
+[**10**] *filter(last_name=F("first_name"))*
+```bash
+    from serializer.models import Employee
+    from django.db.models import F
+    result = Employee.objects.filter(last_name=F("first_name"))
+    str(result.query)
+    print result
+```
+### Substring ###
+[**11**] *Substr("first_name", 1, 1)*
+```bash
+    from serializer.models import Employee
+    from django.db.models import F
+    from django.db.models.functions import Substr
+    result = Employee.objects.annotate(
+        first=Substr("first_name", 1, 1),
+        last=Substr("last_name", 1, 1)
+    ).filter(first=F("last"))
+    str(result.query)
+    print result
+```
+### Check File Field ###
+[**12**] Q(file='')|Q(file=None)
+* Not checked
+
+```bash
+    no_files_objects = MyModel.objects.filter(Q(file='')|Q(file=None))
+```
+### Slice Operators  ###
+* Slice operators raw query cannot be generated in django 1.11 (first(), last())
+* **[2]** means LIMIT 1 OFFSET 2 {slicing}
+
+[**13**] *first()*
+*   str(result.query) won't work
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.first()
+    print(result)
+```
+
+[**14**] *last()*
+*   str(result.query) won't work
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.last()
+    print(result)
+```
+
+[**15**] *order_by(args)*
+*   str(result.query) won't work
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.order_by('-age')[1]
+    print result
+```
+
+[**16**] *Alternative to first() using all()[start:end]*
+* **[:2]** means LIMIT 2
+* **[1:2]** means LIMIT 1 OFFSET 1
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.all()[1:2]
+    str(result.query)
+    print result
+```
+
+[**17**] *Alternative to nth-order using all()[start:end]*
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.all()[3:4]
+    str(result.query)
+    print result
+```
+### Check Duplicates ###
+[**18**] *filter(args), for item in duplicates, Count(args)*
+* first_name__in=[str, str] {takes in array}
+```bash
+    Get the number of duplicates, along with the name,
+
+    from serializer.models import Employee
+    from django.db.models import Count
+    employee = Employee.objects
+    duplicates = employee.values('first_name')
+            .annotate(name_count=Count('first_name')
+            .filter(name_count__gt=1)
+    str(duplicates.query)
+    print duplicates
+
+    Get the object of the duplicates where occured,
+    
+    records = employee.filter(first_name__in=
+        [
+            item['first_name'] for item in duplicates
+        ]
+    )
+    str(records.query)
+    print records
+```
+
+### Get Distinct Values ###
+[**19**] *filter(args), for item in distinct, Count(args)*
+```bash
+    import serializer.models import Employee
+    import django.db.models import Count
+    distinct = Employee.objects.values('first_name')
+                            .annotate(name_count=Count('first_name'))
+                            .filter(name_count=1)
+    
+    records = Employee.objects.filter(first_name__in=
+        [
+            item['first_name'] for item in distinct
+        ]
+    )
+    str(records.query)
+    print records
+```
+
+### Group Records ###
+[**20**] *aggregate.(func(field)) func: Avg, Max, Min, Sum, Count*
+* This wont generate raw sql query in django 1.11
+* Dictionary has no attribute
+```bash
+    Avg,
+        from serializer.models import Employee
+        from django.db.models import Avg
+        result = Employee.objects.aggregate(Avg('salary'))
+        print result
+    Max, 
+        from serializer.models import Employee
+        from django.db.models import Max
+        result = Employee.objects.aggregate(Max('salary'))
+        print result
+    Min,
+        from serializer.models import Employee
+        from django.db.models import Min
+        result = Employee.objects.aggregate(Min('salary'))
+        print result
+    Sum,
+        from serializer.models import Employee
+        from django.db.models import Sum
+        result = Employee.objects.aggregate(Sum('salary'))
+        print result
+    Count,
+        from serializer.models import Employee
+        from django.db.models import Count
+        result = Employee.objects.aggregate(Count('salary'))
+        print result
 ```
