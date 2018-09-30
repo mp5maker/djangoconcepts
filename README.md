@@ -93,6 +93,19 @@ No | Arguments | Condition | Description
 16 | Field.verbose_name | --- | Human readable name, if not given, django creates using attribute names and converts attributes into spaces
 17 | Field.validator | --- | Use validation with the fields   
 
+## Understanding *args and **kwargs
+* Usually kept as the last item of the functions
+* Allows the functions to accept an arbitrary number of arguments and/or keyword arguments
+* Most commonly used in object-oriented programming when overriding a function
+* '*'and '**' actually do the magic, writing *args and **kwargs is not mandatory, used only as convention
+
+## Importing from Django ##
+Name | Imports
+---- | -------
+django.db.models | P, Q, F, Avg, Max, Min, Sum, Count, Subquery, OuterRef
+django.db.models.functions | Substr, Lower
+
+
 ## Learning Querysets ##
 * Match the Raw Queries with queryset.sql file 
 
@@ -116,10 +129,10 @@ No | Arguments | Condition | Description
 *Creating a Simple Employee Model*
 ```python
     class Employee(models.Model):
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
-    age = models.IntegerField()
-    salary = models.FloatField()
+        first_name = models.CharField(max_length=200)
+        last_name = models.CharField(max_length=200)
+        age = models.IntegerField()
+        salary = models.FloatField()
 
     def __str__(self):
         return self.first_name + " " + self.last_name
@@ -400,4 +413,150 @@ No | Arguments | Condition | Description
         from django.db.models import Count
         result = Employee.objects.aggregate(Count('salary'))
         print result
+```
+### Create Multiple Objects At One Shot ###
+[**21**] *bulk_create([Object(fields)])*
+```bash
+    print Category.objects.all().count()
+    result = Category.objects.bulk_create([Category(name="Hypnotic")])
+    print Category.objects.all()
+```
+
+### Copy or Clone an existing Model ###
+[**22**] *save()*
+```bash
+    from serializer.models import Hero
+    hero = Hero.objects.first()
+    hero.pk = None
+    hero.save()
+    print Hero.objects.all().count()
+```
+
+### Signals ###
+* All built in signals are sent using the send() method
+* django.db.models.signals module defines signals in the model system
+
+Signals | Arguments send with signal
+------- | -----------
+django.db.models.pre_init | sender, args, kwargs
+django.db.models.post_init | sender, instance
+django.db.models.pre_save | sender, instance, raw, using, update_fields
+django.db.models.post_save | sender, instance, created, raw, using, update_fields
+django.db.models.pre_delete | sender, instance, using
+django.db.models.post_delete | sender, instance, using
+django.db.models.m2m_changed | many to many fields changed, sender, action, "pre_add", "post_add", "pre_delete", "post_delete", "pre_clear", "post_clear", reverse, model, pk_set, using
+django.db.models.class_prepared | sender
+django.db.models.pre_migrate | sender, app_config, verbosity, interactive, using, plan, apps
+django.db.models.post_migrate | sender, app_config, verbosity, interactive, using, plan, apps
+django.core.signals.request_started | sender, environ
+django.core.signals.request_finished | sender
+django.core.signals.got_request_exception | sender, request
+django.test.override.settings | sender, setting, value, enter
+django.test.signals.template_rendered | sender, template, context
+django.db.backends.signals.connection_created | sender, connection
+
+### Setting Up Signal [Didn't Work] ###
+**models.py**
+```python
+# Category Model
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    hero_count = models.PositiveIntegerField(default=0)
+    villain_count = models.PositiveIntegerField(default=0)
+
+    # Name of the object that is created
+    def __str__(self):
+        return self.name
+
+    # Plural name of the table
+    class Meta:
+        verbose_name = "Categories"
+        verbose_name_plural = "Categories"
+    
+# Hero Model
+class Hero(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    benevolence_factor = models.PositiveSmallIntegerField(
+        help_text="How benevolent this here is ?",
+        default=50
+    )
+
+    # Name of the object that is created
+    def __str__(self):
+        return self.name
+
+    # Plural name of the table
+    class Meta:
+        verbose_name = "Heroes"
+        verbose_name_plural = "Heroes"
+
+# Villain Model
+class Villain(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Villains"
+```
+**signals.py**
+```python
+    from django.db.models.signals import pre_save
+    from django.db.models import F
+    from django.dispatch import receiver
+    from serializer.models import Hero, Villain, Category
+
+    @receiver(pre_save, sender=Hero, dispatch_uid="update_hero_count")
+    def update_hero_count(sender, **kwargs):
+        hero = kwargs['instance']
+        if hero.pk:
+            Category.objects.filter(pk=hero.category_id).update(hero_count=F('hero_count')+1)
+
+    @receiver(pre_save, sender=Villain, dispatch_uid="update_villain_count")
+    def update_villain_count(sender, **kwargs):
+        villain = kwargs['instance']
+        if villain.pk:
+            print "Villain Added"
+            Category.objects.filter(pk=villain.category_id).update(villain_count=F('villain_count')+1)
+```
+
+**apps.py**
+```python
+from __future__ import unicode_literals
+
+from django.apps import AppConfig
+from django.db.models.signals import pre_save
+
+class SerializerConfig(AppConfig):
+    name = 'serializer'
+
+    def ready(self):
+        from serializer.models import Hero, Villain
+        from serializer.signals import update_hero_count, update_villain_count
+        pre_save.connect(update_hero_count, sender=Hero)
+        pre_save.connect(update_villain_count, sender=Villain)
+```
+
+**__init.py__**
+```python
+default_app_config = 'serializer.apps.SerializerConfig'
+```
+
+### Order a QuerySet ###
+[**23**] *order_by*
+```bash
+    from serializer.models import Employee
+    result = Employee.objects.order_by('age')('-salary')
+    str(result.query)
+    print result
+```
+
+### Order a QuerySet with InnerJoin ###
+[**24**] *__ Double Underscore*
+```bash
+    from serializer.models import Hero, Category
+    result = Hero.objects.order_by('category__name', 'name')
 ```

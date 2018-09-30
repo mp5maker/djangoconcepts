@@ -284,3 +284,37 @@ WHERE
 
 20. Group Records [This wont show any sql]
 SQL SKIPPED
+
+21. Bulk Create
+SQL SKIPPED
+
+22. Save()
+SQL SKIPPED
+
+23. order_by('-age', '-salary')
+SELECT
+   "serializer_employee"."id",
+   "serializer_employee"."first_name",
+   "serializer_employee"."last_name",
+   "serializer_employee"."age",
+   "serializer_employee"."salary" 
+FROM
+   "serializer_employee" 
+ORDER BY
+   "serializer_employee"."age" ASC,
+   "serializer_employee"."salary" DESC
+
+23. __ Double Underscore Inner date_join
+SELECT
+   "serializer_hero"."id",
+   "serializer_hero"."name",
+   "serializer_hero"."category_id",
+   "serializer_hero"."benevolence_factor" 
+FROM
+   "serializer_hero" 
+   INNER JOIN
+      "serializer_category" 
+      ON ("serializer_hero"."category_id" = "serializer_category"."id") 
+ORDER BY
+   "serializer_category"."name" ASC,
+   "serializer_hero"."name" ASC

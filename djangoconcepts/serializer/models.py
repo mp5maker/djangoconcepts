@@ -21,6 +21,8 @@ class Employee(models.Model):
 # Category Model
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    hero_count = models.PositiveIntegerField(default=0)
+    villain_count = models.PositiveIntegerField(default=0)
 
     # Name of the object that is created
     def __str__(self):
@@ -31,8 +33,6 @@ class Category(models.Model):
         verbose_name = "Categories"
         verbose_name_plural = "Categories"
     
-    
-
 # Hero Model
 class Hero(models.Model):
     name = models.CharField(max_length=100)
@@ -50,3 +50,14 @@ class Hero(models.Model):
     class Meta:
         verbose_name = "Heroes"
         verbose_name_plural = "Heroes"
+
+# Villain Model
+class Villain(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Villains"
