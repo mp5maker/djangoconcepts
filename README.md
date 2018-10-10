@@ -560,3 +560,5 @@ default_app_config = 'serializer.apps.SerializerConfig'
     from serializer.models import Hero, Category
     result = Hero.objects.order_by('category__name', 'name')
 ```
+## Inner Join ##
+pubs = publication.objects.select_related(fieldnames)

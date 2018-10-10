@@ -13,5 +13,5 @@ def update_hero_count(sender, **kwargs):
 def update_villain_count(sender, **kwargs):
     villain = kwargs['instance']
     if villain.pk:
-        print "Villain Added"
+        print ("Villain Added")
         Category.objects.filter(pk=villain.category_id).update(villain_count=F('villain_count')+1)
